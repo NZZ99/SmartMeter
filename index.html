@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SmartMeter Pro</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: #060B18; 
+            color: #F8FAFC; 
+            user-select: none; 
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Scrollbar ဖျောက်ရန် */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        * {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+        }
+
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 24px; 
+        }
+
+        .tab-active {
+            background: rgba(37, 99, 235, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+
+        .content-scroll {
+            height: calc(100vh - 200px); 
+            overflow-y: auto;
+            padding-bottom: 120px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150px);
+            background: rgba(30, 41, 59, 0.95);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 12px;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="toast" class="toast text-white">အောင်မြင်ပါသည်။</div>
+
+    <div class="h-screen flex flex-col">
+        
+        <header class="px-6 pt-12 pb-4 flex-none">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 id="pageTitle" class="text-xl font-black uppercase tracking-tighter text-blue-500">Search</h1>
+                        <i data-lucide="zap" class="w-5 h-5 text-blue-500 fill-blue-500"></i>
+                    </div>
+                    <p id="pageSub" class="text-slate-500 text-[9px] font-bold tracking-[0.3em]">SMART METER DATABASE</p>
+                </div>
+                <div class="w-10 h-10 glass-card flex items-center justify-center text-blue-500">
+                    <i data-lucide="cloud-lightning" class="w-5 h-5 opacity-50"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-hidden px-6 relative">
+            
+            <div id="page-search" class="page-content h-full">
+                <form id="searchForm" class="relative mb-6">
+                    <!-- Search Box ကို လေးဘက်လုံး အပြာရောင် border ဖြစ်အောင် ပြင်ဆင်ထားသည် -->
+                    <div class="relative border-4 border-blue-600 rounded-2xl overflow-hidden">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 w-5 h-5"></i>
+                        <input type="text" id="searchInput" class="w-full h-14 bg-blue-600/10 pl-12 pr-4 text-sm outline-none text-blue-100 placeholder-blue-500/50" placeholder="မီတာနံပါတ်၊ အမည် သို့မဟုတ် လိပ်စာဖြင့် ရှာပါ">
+                        <button type="submit" class="absolute right-2 top-2 bottom-2 px-5 bg-blue-600 rounded-xl text-xs font-bold active:bg-blue-700">Search</button>
+                    </div>
+                </form>
+
+                <div id="searchResult" class="content-scroll space-y-4">
+                    <div id="emptySearch" class="glass-card py-20 text-center opacity-40">
+                        <i data-lucide="database" class="mx-auto mb-4 w-10 h-10"></i>
+                        <p class="text-[10px] tracking-widest uppercase">No Records Found</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-info" class="page-content h-full hidden">
+                <div class="glass-card p-6 space-y-6 overflow-y-auto h-full pb-20">
+                    <div>
+                        <h3 class="text-blue-400 font-bold text-sm mb-4">အသုံးပြုနည်း</h3>
+                        <ul class="text-[11px] text-slate-400 space-y-3 leading-relaxed list-disc pl-4">
+                            <li>မီတာနံပါတ် သို့မဟုတ် အမည်ဖြင့် အလွယ်တကူ ရှာဖွေနိုင်ပါသည်။</li>
+                            <li>အချက်အလက်များကို အချိန်နှင့်တပြေးညီ ကြည့်ရှုနိုင်ပါသည်။</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="fixed bottom-6 left-6 right-6 h-18 liquid-glass flex items-center justify-around px-2 z-50">
+            <button onclick="switchPage('search')" id="nav-search" class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all tab-active">
+                <i data-lucide="search" class="w-5 h-5"></i>
+                <span class="text-[8px] font-bold">Search</span>
+            </button>
+            <button onclick="switchPage('info')" id="nav-info" class="flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-slate-500">
+                <i data-lucide="settings-2" class="w-5 h-5"></i>
+                <span class="text-[8px] font-bold">Options</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTfI2SdtyNjwossByzTn38sppmSkcHatoFpW7fAKeWrAwcpMRdnHQ2Np6VJonXsrtkChq3hW6Fh2gLW/pub?gid=0&single=true&output=csv"; 
+
+        let database = [];
+        let headers = [];
+
+        lucide.createIcons();
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedData = localStorage.getItem('smart_meter_db');
+            const savedHeaders = localStorage.getItem('smart_meter_headers');
+            
+            if(savedData && savedHeaders) {
+                try {
+                    database = JSON.parse(savedData);
+                    headers = JSON.parse(savedHeaders);
+                } catch(e) { console.error("Cache corrupted"); }
+                syncFromCloud(); 
+            } else {
+                syncFromCloud();
+            }
+        });
+
+        async function syncFromCloud() {
+            if(!GOOGLE_SHEET_CSV_URL) return;
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                if (!response.ok) throw new Error('Network Error');
+                const text = await response.text();
+                parseAndSetData(text);
+            } catch (error) {
+                console.log("Offline or Sync Failed. Using Local Data.");
+            }
+        }
+
+        function formatHeader(h) {
+            if (!h) return '';
+            const match = h.match(/^(\d+)\/(\d+)$/);
+            if (match) {
+                const month = parseInt(match[1]);
+                const year = match[2].slice(-2);
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                return `${monthNames[month - 1]}-${year}`;
+            }
+            return h;
+        }
+
+        function parseAndSetData(csvText) {
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+                const char = csvText[i];
+                const nextChar = csvText[i + 1];
+
+                if (inQuotes) {
+                    if (char === '"' && nextChar === '"') {
+                        currentField += '"';
+                        i++;
+                    } else if (char === '"') {
+                        inQuotes = false;
+                    } else {
+                        currentField += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuotes = true;
+                    } else if (char === ',') {
+                        currentRow.push(currentField.trim());
+                        currentField = '';
+                    } else if (char === '\n' || char === '\r') {
+                        if (char === '\r' && nextChar === '\n') i++;
+                        currentRow.push(currentField.trim());
+                        if (currentRow.length > 1 || (currentRow.length === 1 && currentRow[0] !== '')) {
+                            rows.push(currentRow);
+                        }
+                        currentRow = [];
+                        currentField = '';
+                    } else {
+                        currentField += char;
+                    }
+                }
+            }
+            if (currentRow.length > 0 || currentField !== '') {
+                currentRow.push(currentField.trim());
+                rows.push(currentRow);
+            }
+
+            if (rows.length === 0) return;
+
+            headers = rows[0];
+            database = rows.slice(1).map(row => {
+                let obj = {};
+                headers.forEach((h, i) => { 
+                    obj[h] = row[i] || '';
+                });
+                obj._rawRow = row; 
+                return obj;
+            });
+
+            localStorage.setItem('smart_meter_db', JSON.stringify(database));
+            localStorage.setItem('smart_meter_headers', JSON.stringify(headers));
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('tab-active', 'text-slate-500');
+                b.classList.add('text-slate-500');
+            });
+            document.getElementById(`nav-${pageId}`).classList.add('tab-active');
+            document.getElementById(`nav-${pageId}`).classList.remove('text-slate-500');
+            
+            document.getElementById('pageTitle').innerText = pageId.toUpperCase();
+            lucide.createIcons();
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const container = document.getElementById('searchResult');
+            if(!q) return;
+
+            const results = database.filter(d => {
+                return Object.values(d).some(val => val.toString().toLowerCase().includes(q));
+            }).slice(0, 30);
+
+            if(results.length === 0) {
+                container.innerHTML = `<div class="glass-card py-20 text-center opacity-40"><p class="text-[10px]">ရှာမတွေ့ပါ</p></div>`;
+                return;
+            }
+
+            container.innerHTML = results.map(r => {
+                const comVal = r['com-code'] || '-';
+                const ledgerVal = r['Ledger-code'] || '-';
+                const meterVal = r['Meter-No'] || '-';
+                const lastDateVal = r['Last Date'] || '-';
+                const nameVal = r['Name'] || '-';
+                const addressVal = r['Address'] || '-';
+                
+                let monthHtml = "";
+                const rowArray = r._rawRow || [];
+                
+                for(let i = 6; i < headers.length; i += 2) {
+                    const unitLabel = formatHeader(headers[i]) || 'Unit';
+                    const moneyLabel = "MMK"; 
+                    
+                    const unitVal = rowArray[i] || '0';
+                    const moneyVal = rowArray[i+1] || '0';
+
+                    monthHtml += `
+                    <div class="bg-blue-600/10 border border-blue-500/30 rounded-2xl p-4 flex justify-between items-center shadow-lg mb-2">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-1 mb-1">
+                                <i data-lucide="zap" class="w-3 h-3 text-blue-400"></i>
+                                <p class="text-[9px] text-blue-400 uppercase font-black tracking-wider">${unitLabel}</p>
+                            </div>
+                            <p class="text-xl font-black text-white leading-none">${unitVal}</p>
+                        </div>
+                        <div class="w-px h-10 bg-blue-500/20 mx-4"></div>
+                        <div class="flex-1 text-right">
+                            <div class="flex items-center justify-end gap-1 mb-1">
+                                <p class="text-[9px] text-emerald-400 uppercase font-black tracking-wider">${moneyLabel}</p>
+                                <i data-lucide="banknote" class="w-3 h-3 text-emerald-400"></i>
+                            </div>
+                            <p class="text-xl font-black text-white leading-none">${moneyVal}</p>
+                        </div>
+                    </div>`;
+                }
+
+                return `
+                <div class="glass-card p-5 space-y-4 border-4 border-blue-600">
+                    <div class="bg-blue-600/10 p-4 rounded-xl border border-blue-500/30">
+                        <h4 class="font-black text-blue-400 text-lg leading-tight">${nameVal}</h4>
+                        <p class="text-slate-400 text-[11px] mt-1 font-medium italic">${addressVal}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-blue-600/10 p-3 rounded-xl border border-blue-500/30">
+                            <p class="text-[7px] text-blue-400 uppercase font-bold mb-1">Com Code</p>
+                            <p class="text-[10px] font-bold text-blue-400 truncate">${comVal}</p>
+                        </div>
+                        <div class="bg-blue-600/10 p-3 rounded-xl border border-blue-500/30">
+                            <p class="text-[7px] text-blue-400 uppercase font-bold mb-1">Ledger</p>
+                            <p class="text-[10px] font-bold text-blue-400 truncate">${ledgerVal}</p>
+                        </div>
+                        <div class="bg-blue-600/10 p-3 rounded-xl border border-blue-500/30">
+                            <p class="text-[7px] text-blue-400 uppercase font-bold mb-1">Meter No</p>
+                            <p class="text-[10px] font-bold text-blue-400 truncate">${meterVal}</p>
+                        </div>
+                        <div class="bg-blue-600/5 p-3 rounded-xl border border-blue-500/20">
+                            <p class="text-[7px] text-blue-400 uppercase font-bold mb-1">Last Date</p>
+                            <p class="text-[10px] font-bold text-blue-300 truncate">${lastDateVal}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-white/5">
+                        <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 text-center">တစ်နှစ်စာအကျဉ်းချုပ်</p>
+                        <div class="mt-2">
+                            ${monthHtml}
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
+
